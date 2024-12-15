@@ -316,8 +316,13 @@ export default class GitGateway implements BackendClass {
       };
 
       if (this.backendType === 'github') {
-        this.api = new GitHubAPI(apiConfig);
-        this.backend = new GitHubBackend(this.config, { ...this.options, API: this.api });
+        this.backend = new GitHubBackend(this.config, { ...this.options });
+        this.api = new GitHubAPI({
+          ...apiConfig,
+          getUser: this.backend.currentUser,
+          getRepo: this.backend.getRepo,
+        });
+        this.backend.api = this.api;
       } else if (this.backendType === 'gitlab') {
         this.api = new GitLabAPI(apiConfig);
         this.backend = new GitLabBackend(this.config, { ...this.options, API: this.api });

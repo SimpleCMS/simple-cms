@@ -31,6 +31,8 @@ describe('github API', () => {
         squashMerges: false,
         initialWorkflowStatus: WorkflowStatus.DRAFT,
         cmsLabelPrefix: '',
+        getUser: () => Promise.reject('Unexpected call'),
+        getRepo: () => Promise.reject('Unexpected call'),
       });
 
       api.createTree = jest.fn().mockImplementation(() => Promise.resolve({ sha: 'newTreeSha' }));
@@ -83,6 +85,8 @@ describe('github API', () => {
         squashMerges: false,
         initialWorkflowStatus: WorkflowStatus.DRAFT,
         cmsLabelPrefix: '',
+        getUser: () => Promise.reject('Unexpected call'),
+        getRepo: () => Promise.reject('Unexpected call'),
       });
 
       fetch.mockResolvedValue({
@@ -112,6 +116,8 @@ describe('github API', () => {
         squashMerges: false,
         initialWorkflowStatus: WorkflowStatus.DRAFT,
         cmsLabelPrefix: '',
+        getUser: () => Promise.reject('Unexpected call'),
+        getRepo: () => Promise.reject('Unexpected call'),
       });
 
       fetch.mockResolvedValue({
@@ -140,6 +146,8 @@ describe('github API', () => {
         squashMerges: false,
         initialWorkflowStatus: WorkflowStatus.DRAFT,
         cmsLabelPrefix: '',
+        getUser: () => Promise.reject('Unexpected call'),
+        getRepo: () => Promise.reject('Unexpected call'),
       });
 
       fetch.mockResolvedValue({
@@ -167,6 +175,8 @@ describe('github API', () => {
         squashMerges: false,
         initialWorkflowStatus: WorkflowStatus.DRAFT,
         cmsLabelPrefix: '',
+        getUser: () => Promise.reject('Unexpected call'),
+        getRepo: () => Promise.reject('Unexpected call'),
       });
 
       api.requestHeaders = jest.fn().mockResolvedValue({
@@ -201,6 +211,8 @@ describe('github API', () => {
         squashMerges: false,
         initialWorkflowStatus: WorkflowStatus.DRAFT,
         cmsLabelPrefix: '',
+        getUser: () => Promise.reject('Unexpected call'),
+        getRepo: () => Promise.reject('Unexpected call'),
       });
 
       const responses = {
@@ -305,6 +317,8 @@ describe('github API', () => {
         squashMerges: false,
         initialWorkflowStatus: WorkflowStatus.DRAFT,
         cmsLabelPrefix: '',
+        getUser: () => Promise.reject('Unexpected call'),
+        getRepo: () => Promise.reject('Unexpected call'),
       });
 
       const tree = [
@@ -391,6 +405,8 @@ describe('github API', () => {
         squashMerges: false,
         initialWorkflowStatus: WorkflowStatus.DRAFT,
         cmsLabelPrefix: '',
+        getUser: () => Promise.reject('Unexpected call'),
+        getRepo: () => Promise.reject('Unexpected call'),
       });
 
       const tree = [

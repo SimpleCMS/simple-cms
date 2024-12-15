@@ -40,7 +40,7 @@ import type {
 import type { AsyncLock } from '@staticcms/core/lib/util';
 import type AssetProxy from '@staticcms/core/valueObjects/AssetProxy';
 import type { Semaphore } from 'semaphore';
-import type { GitHubUser } from './types';
+import type { GitHubUser, ReposGetResponse } from './types';
 
 const MAX_CONCURRENT_DOWNLOADS = 10;
 
@@ -77,9 +77,11 @@ export default class GitHub implements BackendClass {
   previewContext: string;
   token: string | null;
   authScheme: AuthScheme;
+  authenticateAsGithubApp: boolean;
   squashMerges: boolean;
   cmsLabelPrefix: string;
   _currentUserPromise?: Promise<GitHubUser>;
+  _getRepoPromise?: Promise<ReposGetResponse>;
   _userIsOriginMaintainerPromises?: {
     [key: string]: Promise<boolean>;
   };
@@ -117,6 +119,7 @@ export default class GitHub implements BackendClass {
     this.apiRoot = config.backend.api_root || 'https://api.github.com';
     this.token = '';
     this.authScheme = config.backend.auth_scheme || 'token';
+    this.authenticateAsGithubApp = config.backend.authenticate_as_github_app || false;
     this.squashMerges = config.backend.squash_merges || false;
     this.cmsLabelPrefix = config.backend.cms_label_prefix || '';
     this.mediaFolder = config.media_folder;
@@ -145,8 +148,7 @@ export default class GitHub implements BackendClass {
     // no need to check auth if api is down
     if (api) {
       auth =
-        (await this.api
-          ?.getUser()
+        (await this.currentUser({ token: this.token || '' })
           .then(user => !!user)
           .catch(e => {
             console.warn('[StaticCMS] Failed getting GitHub user', e);
@@ -193,13 +195,45 @@ export default class GitHub implements BackendClass {
     return Promise.resolve();
   }
 
-  async currentUser({ token }: { token: string }) {
-    if (!this._currentUserPromise) {
-      this._currentUserPromise = fetch(`${this.apiRoot}/user`, {
+  async getRepo({ token }: { token: string }) {
+    if (!this._getRepoPromise) {
+      this._getRepoPromise = fetch(`${this.apiRoot}/repos/${this.repo}`, {
         headers: {
           Authorization: `${this.authScheme} ${token}`,
         },
       }).then(res => res.json());
+    }
+    return this._getRepoPromise;
+  }
+
+  async getApp({ token }: { token: string }) {
+    return fetch(`${this.apiRoot}/app`, {
+      headers: {
+        Authorization: `${this.authScheme} ${token}`,
+      },
+    })
+      .then(res => res.json())
+      .then(
+        res =>
+          ({
+            name: res.name,
+            login: res.slug,
+            avatar_url: `https://avatars.githubusercontent.com/in/${res.id}?v=4`,
+          }) as GitHubUser,
+      );
+  }
+
+  async currentUser({ token }: { token: string }) {
+    if (!this._currentUserPromise) {
+      if (this.authenticateAsGithubApp) {
+        this._currentUserPromise = this.getApp({ token });
+      } else {
+        this._currentUserPromise = fetch(`${this.apiRoot}/user`, {
+          headers: {
+            Authorization: `${this.authScheme} ${token}`,
+          },
+        }).then(res => res.json());
+      }
     }
     return this._currentUserPromise;
   }
@@ -293,6 +327,7 @@ export default class GitHub implements BackendClass {
     this.api = new apiCtor({
       token: this.token,
       authScheme: this.authScheme,
+      authenticateAsGithubApp: this.authenticateAsGithubApp,
       branch: this.branch,
       repo: this.repo,
       originRepo: this.originRepo,
@@ -302,8 +337,10 @@ export default class GitHub implements BackendClass {
       useOpenAuthoring: this.useOpenAuthoring,
       openAuthoringEnabled: this.openAuthoringEnabled,
       initialWorkflowStatus: this.options.initialWorkflowStatus,
+      getUser: this.currentUser,
+      getRepo: this.getRepo,
     });
-    const user = await this.api!.user();
+    const user = await this.currentUser({ token: this.token });
     const isCollab = await this.api!.hasWriteAccess().catch(error => {
       error.message = stripIndent`
         Repo "${this.repo}" not found.

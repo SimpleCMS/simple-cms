@@ -12,6 +12,8 @@ const createApi = (options: Partial<GitHubApiOptions> = {}) => {
     cmsLabelPrefix: 'CMS',
     isLargeMedia: () => Promise.resolve(false),
     commitAuthor: { name: 'Bob' },
+    getUser: () => Promise.reject('Unexpected call'),
+    getRepo: () => Promise.reject('Unexpected call'),
     ...options,
   });
 };

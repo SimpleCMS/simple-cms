@@ -1029,6 +1029,7 @@ export interface Backend {
   gateway_url?: string;
   auth_scope?: AuthScope;
   auth_scheme?: AuthScheme;
+  authenticate_as_github_app?: boolean;
   commit_messages?: {
     create?: string;
     update?: string;
